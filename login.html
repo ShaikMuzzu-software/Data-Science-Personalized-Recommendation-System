@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign in — Personalized Recommender</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f2fbff;--card:#fff;--accent:#007bff;--muted:#6b7280}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:linear-gradient(180deg,#eaf8ff 0%, #fbfcff 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .wrap{max-width:1000px;width:100%;display:grid;grid-template-columns:1fr 420px;gap:26px;align-items:center}
+    .hero{padding:36px;border-radius:12px;background:linear-gradient(180deg,#ffffffaa, #f7fbff);box-shadow:0 10px 30px rgba(2,6,23,0.06)}
+    .card{background:var(--card);border-radius:12px;padding:20px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
+    h1{margin:0;color:#0b74de}
+    p.lead{color:var(--muted);margin-top:10px}
+    label{display:block;font-size:13px;margin-top:10px;color:#111827}
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8;margin-top:6px}
+    button{margin-top:12px;padding:10px 14px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer}
+    .muted{color:var(--muted);font-size:13px;margin-top:8px}
+    .small{font-size:13px;color:#475569}
+    .links{margin-top:12px;display:flex;gap:8px}
+    .logo{display:flex;align-items:center;gap:10px}
+    .logo .pill{width:36px;height:36px;border-radius:10px;background:linear-gradient(90deg,#ff7a7a,#ffb36b);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    @media (max-width:880px){ .wrap{grid-template-columns:1fr; padding:8px} .hero{order:2} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero card">
+      <div class="logo"><div class="pill">PR</div><div><h1>Personalized Recommender</h1><div class="small">Smart suggestions for demo datasets</div></div></div>
+      <p class="lead">Sign in to get personalized medicine recommendations, try the prediction model, and save your session.</p>
+
+      <div style="margin-top:18px">
+        <label>Username</label>
+        <input id="username" placeholder="your username" />
+        <label>Password</label>
+        <input id="password" type="password" placeholder="password" />
+        <div class="links">
+          <button id="btnLogin">Log in</button>
+          <button id="btnSignup" style="background:#f3f4f6;color:#0b74de;border:1px solid #e6eef8">Sign up</button>
+        </div>
+        <div id="status" class="muted"></div>
+      </div>
+
+      <div style="margin-top:18px" class="muted">Demo only — nothing here is medical advice. Use the <strong>Dashboard</strong> after login.</div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0;color:#0b74de">Quick demo</h3>
+      <p class="muted">Try the credentials below or sign up for a new account.</p>
+      <div style="margin-top:8px">
+        <div class="small"><strong>Default demo:</strong> username <code>demo</code> / password <code>demo123</code></div>
+        <ol style="margin-top:10px;color:#475569">
+          <li>Log in (or sign up)</li>
+          <li>Redirect to Dashboard</li>
+          <li>Enter query and press Recommend</li>
+        </ol>
+        <div style="margin-top:12px">
+          <button id="gotoDash" style="background:#0b74de;color:#fff">Open Dashboard (without login)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const api = (path, method='GET', body=null, token=null) => {
+      const headers = {'Accept':'application/json'};
+      if(body) { headers['Content-Type']='application/json'; body = JSON.stringify(body); }
+      if(token) headers['Authorization']='Bearer '+token;
+      return fetch(path, {method, headers, body}).then(r=>r.json().catch(()=>({raw_status:r.status})));
+    };
+
+    // If token present, redirect to dashboard (immediate)
+    (function(){
+      const t = localStorage.getItem('demo_token');
+      if(t){
+        // small check to avoid accidental redirect loops
+        if(!window.location.href.includes('/dashboard')){
+          window.location.href = '/dashboard';
+        }
+      }
+    })();
+
+    document.getElementById('btnLogin').onclick = async () => {
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+      if(!u||!p){ document.getElementById('status').innerText='Enter username and password'; return; }
+      document.getElementById('status').innerText='Logging in...';
+      try{
+        const res = await api('/login','POST',{username:u,password:p});
+        if(res.access_token){
+          localStorage.setItem('demo_token', res.access_token);
+          document.getElementById('status').innerText='Login OK — redirecting...';
+          setTimeout(()=> window.location.href='/dashboard', 500);
+        } else {
+          document.getElementById('status').innerText = JSON.stringify(res);
+        }
+      }catch(e){
+        document.getElementById('status').innerText = 'Network error: '+e.message;
+      }
+    };
+
+    document.getElementById('btnSignup').onclick = async () => {
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+      if(!u||!p){ document.getElementById('status').innerText='Enter username and password'; return; }
+      document.getElementById('status').innerText='Signing up...';
+      try{
+        const res = await api('/signup','POST',{username:u,password:p});
+        if(res.access_token){
+          localStorage.setItem('demo_token', res.access_token);
+          document.getElementById('status').innerText='Signup OK — redirecting...';
+          setTimeout(()=> window.location.href='/dashboard', 500);
+        } else {
+          document.getElementById('status').innerText = JSON.stringify(res);
+        }
+      }catch(e){
+        document.getElementById('status').innerText = 'Network error: '+e.message;
+      }
+    };
+
+    document.getElementById('gotoDash').onclick = ()=> {
+      window.location.href='/dashboard';
+    };
+
+    // prefill demo
+    document.getElementById('username').value='demo';
+    document.getElementById('password').value='demo123';
+  </script>
+</body>
+</html>

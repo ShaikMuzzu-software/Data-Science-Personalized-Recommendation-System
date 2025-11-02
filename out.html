@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Medicine Recommendations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 26px;
+      color: #2563eb;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      max-width: 1100px;
+      margin: auto;
+    }
+    .card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+    }
+    .title {
+      font-size: 18px;
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #1f2937;
+    }
+    .score {
+      font-size: 14px;
+      font-weight: bold;
+      color: #16a34a;
+    }
+    .desc {
+      font-size: 14px;
+      color: #374151;
+    }
+    .pill {
+      background: #2563eb;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 12px;
+    }
+    footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 13px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <h1>💊 Medicine Recommendations</h1>
+
+  <div class="grid">
+    <div class="card">
+      <h2 class="title">Amlodipine <span class="pill">#1</span></h2>
+      <div class="score">Score: 0.7168</div>
+      <p class="desc">Calcium channel blocker for hypertension.</p>
+    </div>
+
+    <div class="card">
+      <h2 class="title">Lisinopril <span class="pill">#2</span></h2>
+      <div class="score">Score: 0.2050</div>
+      <p class="desc">Used for high blood pressure and heart failure.</p>
+    </div>
+
+    <div class="card">
+      <h2 class="title">Glimepiride <span class="pill">#3</span></h2>
+      <div class="score">Score: 0.0000</div>
+      <p class="desc">Oral diabetes medicine that helps control blood sugar.</p>
+    </div>
+
+    <div class="card">
+      <h2 class="title">Aspirin <span class="pill">#4</span></h2>
+      <div class="score">Score: 0.0000</div>
+      <p class="desc">Pain reliever; low-dose aspirin used for cardiac protection.</p>
+    </div>
+
+    <div class="card">
+      <h2 class="title">Atorvastatin <span class="pill">#5</span></h2>
+      <div class="score">Score: 0.0000</div>
+      <p class="desc">Lowers cholesterol; helps prevent cardiovascular disease.</p>
+    </div>
+  </div>
+
+  <footer>
+    ⚠️ These results are for informational purposes only. Consult a medical professional for advice.
+  </footer>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Personalized Reco — Demo</title>
+  <style>
+    :root{ --accent:#0b74de; --muted:#6b7280; --card:#ffffff; --glass:rgba(255,255,255,0.7);} 
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, 'Helvetica Neue', Arial; margin:0; background:linear-gradient(135deg,#f0f7ff 0%, #f7fdf7 100%); color:#0f1724}
+    .wrap{max-width:1100px;margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    h1{margin:0;font-size:20px;color:var(--accent)}
+    .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:16px}
+    .form-row{display:flex;gap:8px;align-items:center}
+    input, textarea, button, select{font-size:14px;padding:8px;border-radius:8px;border:1px solid #e6eef8;outline:none}
+    button{background:var(--accent);color:white;border:none;cursor:pointer}
+    .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+    .result-card{padding:12px;border-radius:10px;background:linear-gradient(180deg,#fff 0%, #fbfdff 100%);box-shadow:0 6px 12px rgba(9,30,66,0.05)}
+    .muted{color:var(--muted);font-size:13px}
+    .login-area{display:flex;flex-direction:column;gap:8px}
+    .footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+    .small{font-size:12px;color:#6b7280}
+    #predictBox{display:none;margin-top:12px;padding:12px;border-radius:10px;background:#f4f8ff;border:1px solid #cbd5e1}
+    #predictBox h4{margin:0 0 6px 0;color:#0b74de}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>💊 Personalized Recommender — Demo</h1>
+      <div class="small">Demo — Not medical advice</div>
+    </header>
+
+    <div class="grid">
+      <main>
+        <!-- Recommendation Section -->
+        <div class="card">
+          <h3>Ask for recommendations</h3>
+          <div class="muted">Enter a query (e.g., "hypertension treatment options") and press Recommend.</div>
+          <div style="margin-top:12px" class="form-row">
+            <input id="query" placeholder="e.g. hypertension treatment options" style="flex:1" />
+            <input id="topk" type="number" min="1" max="20" value="5" style="width:88px" />
+            <button id="btnRec">Recommend</button>
+          </div>
+
+          <div id="results" class="results"></div>
+          <div id="last" style="margin-top:12px" class="muted"></div>
+        </div>
+
+        <!-- Model Testing Section -->
+        <div class="card" style="margin-top:12px">
+          <h3>Model testing (open)</h3>
+          <div class="muted">Use public predict endpoint to test the disease classifier.</div>
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+            <input id="age" placeholder="age" style="width:100px" />
+            <input id="bp" placeholder="blood_pressure" style="width:120px" />
+            <input id="glu" placeholder="glucose" style="width:120px" />
+            <input id="hr" placeholder="heart_rate" style="width:120px" />
+            <button id="btnPredict">Predict</button>
+          </div>
+
+          <!-- Prediction Result Box -->
+          <div id="predictBox">
+            <h4>🩺 Prediction Result</h4>
+            <p><strong>Prediction:</strong> <span id="predText"></span></p>
+            <p><strong>Cause:</strong> <span id="causeText"></span></p>
+          </div>
+        </div>
+      </main>
+
+      <!-- Sidebar -->
+      <aside>
+        <div class="card login-area">
+          <h3>Account</h3>
+          <input id="username" placeholder="username" />
+          <input id="password" type="password" placeholder="password" />
+          <div style="display:flex;gap:8px">
+            <button id="btnSignup">Sign up</button>
+            <button id="btnLogin">Log in</button>
+          </div>
+          <div id="authStatus" class="muted" style="margin-top:8px">Not logged in</div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3>Quick actions</h3>
+          <button id="btnPing">Ping</button>
+          <button id="btnLast" style="margin-left:8px">Show last request</button>
+          <pre id="lastRaw" class="muted" style="white-space:pre-wrap;margin-top:8px"></pre>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer">Made for demo purposes. Replace models/ and secrets for production.</div>
+  </div>
+
+  <script>
+    const state = { token: null };
+
+    function setAuthToken(t){
+      state.token = t;
+      localStorage.setItem('demo_token', t);
+      document.getElementById('authStatus').innerText = t ? 'Logged in' : 'Not logged in';
+    }
+
+    // load saved token
+    const saved = localStorage.getItem('demo_token'); 
+    if(saved) { setAuthToken(saved); }
+
+    async function api(path, method='GET', body=null){
+      const headers = { 'Accept':'application/json' };
+      if(body && !(body instanceof FormData)) { headers['Content-Type'] = 'application/json'; body = JSON.stringify(body); }
+      if(state.token) headers['Authorization'] = 'Bearer ' + state.token;
+      const resp = await fetch(path, { method, headers, body });
+      try{ return await resp.json(); } catch(e){ return { _rawStatus: resp.status, _text: await resp.text() }; }
+    }
+
+    // Ping
+    document.getElementById('btnPing').onclick = async ()=>{ 
+      const r = await api('/ping'); 
+      alert(JSON.stringify(r)); 
+    }
+
+    // Signup
+    document.getElementById('btnSignup').onclick = async ()=>{
+      const u = document.getElementById('username').value.trim(); 
+      const p = document.getElementById('password').value;
+      if(!u||!p) return alert('enter username & password');
+      const r = await api('/signup','POST',{username:u,password:p});
+      if(r.access_token){ setAuthToken(r.access_token); alert('Signed up and logged in'); } 
+      else { alert(JSON.stringify(r)); }
+    }
+
+    // Login
+    document.getElementById('btnLogin').onclick = async ()=>{
+      const u = document.getElementById('username').value.trim(); 
+      const p = document.getElementById('password').value;
+      if(!u||!p) return alert('enter username & password');
+      const r = await api('/login','POST',{username:u,password:p});
+      if(r.access_token){ setAuthToken(r.access_token); alert('Logged in'); } 
+      else { alert(JSON.stringify(r)); }
+    }
+
+    // Recommend
+    document.getElementById('btnRec').onclick = async ()=>{
+      const q = document.getElementById('query').value.trim(); 
+      const topk = parseInt(document.getElementById('topk').value||'5');
+      if(!q) return alert('Enter a query');
+      const r = await api('/recommend','POST',{query:q,top_k:topk});
+      if(r.results){ renderResults(r.results); document.getElementById('last').innerText = 'Disclaimer: ' + (r.disclaimer||''); }
+      else { alert(JSON.stringify(r)); }
+    }
+
+    function renderResults(items){
+      const el = document.getElementById('results'); el.innerHTML='';
+      for(const it of items){
+        const div = document.createElement('div'); div.className='result-card';
+        const title = document.createElement('div'); title.style.fontWeight='600'; title.innerText = it.name || ('id_'+it.id);
+        const score = document.createElement('div'); score.className='small muted'; score.innerText = 'score: ' + (it.semantic_score||it.tfidf_score||it.score||0).toFixed(4);
+        const desc = document.createElement('div'); desc.className='muted'; desc.innerText = it.desc||'';
+        div.appendChild(title); div.appendChild(score); div.appendChild(desc);
+        el.appendChild(div);
+      }
+    }
+
+    // Show last request
+    document.getElementById('btnLast').onclick = async ()=>{ 
+      const r = await api('/last_request'); 
+      document.getElementById('lastRaw').innerText = JSON.stringify(r, null, 2); 
+    }
+
+    // Predict disease
+    document.getElementById('btnPredict').onclick = async ()=>{
+      const age = document.getElementById('age').value||0;
+      const bp = document.getElementById('bp').value||0;
+      const glu = document.getElementById('glu').value||0;
+      const hr = document.getElementById('hr').value||0;
+
+      const r = await api('/predict_open','POST',{
+        age:Number(age),
+        blood_pressure:Number(bp),
+        glucose:Number(glu),
+        heart_rate:Number(hr)
+      });
+
+      // FIXED: now looks inside "result"
+      if(r.status === "success" && r.result){
+        document.getElementById('predictBox').style.display = "block";
+        document.getElementById('predText').innerText = r.result.prediction || "N/A";
+        document.getElementById('causeText').innerText = r.result.cause || "N/A";
+      } else {
+        alert("Unexpected response: " + JSON.stringify(r));
+      }
+    }
+  </script>
+</body>
+</html>

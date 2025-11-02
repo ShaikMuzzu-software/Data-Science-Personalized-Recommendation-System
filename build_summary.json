@@ -1,0 +1,5 @@
+{
+  "train_success": false,
+  "train_log_preview": "              precision    recall  f1-score   support\n\n     cardiac       0.00      0.00      0.00       1.0\nhypertension       0.00      0.00      0.00       0.0\n\n    accuracy                           0.00       1.0\n   macro avg       0.00      0.00      0.00       1.0\nweighted avg       0.00      0.00      0.00       1.0\n\nSaved disease model to models/disease_model.joblib\n\n/home/sandbox/.local/lib/python3.11/site-packages/sklearn/metrics/_classification.py:1334: UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.\n  _warn_prf(average, modifier, msg_start, len(result))\n/home/sandbox/.local/lib/python3.11/site-packages/sklearn/metrics/_classification.py:1334: UndefinedMetricWarning: Recall and F-score are ill-defined and being set to 0.0 in labels with no true samples. Use `zero_division` parameter to control this behavior.\n  _warn_prf(average, modifier, msg_start",
+  "zip_path": "/mnt/data/personalized_reco_system.zip"
+}

@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "desc": "Calcium channel blocker for hypertension.",
+      "id": 4,
+      "name": "Amlodipine",
+      "score": 0.7167702808413025
+    },
+    {
+      "desc": "Used for high blood pressure and heart failure.",
+      "id": 3,
+      "name": "Lisinopril",
+      "score": 0.2049553009205781
+    }
+  ]
+}

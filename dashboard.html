@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dashboard — Personalized Recommender</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f4fbff;--card:#fff;--accent:#0b74de;--accent2:#06b6d4;--muted:#6b7280}
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:linear-gradient(180deg,#f0fbff 0%, #fbfcff 100%);color:#0f1724}
+    header{background:linear-gradient(90deg,var(--accent) 0%, var(--accent2) 100%);color:white;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(90deg,#ff7a7a,#ffb36b);display:flex;align-items:center;justify-content:center;font-weight:700;color:white}
+    nav{display:flex;gap:10px;align-items:center}
+    nav button{background:transparent;border:1px solid rgba(255,255,255,0.18);color:white;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .container{max-width:1200px;margin:22px auto;padding:16px;display:grid;grid-template-columns:1fr 360px;gap:18px}
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
+    .search-row{display:flex;gap:10px}
+    input, select{padding:10px;border-radius:8px;border:1px solid #e6eef8}
+    .btn{background:var(--accent);color:white;padding:10px 12px;border-radius:8px;border:none;cursor:pointer}
+    .results{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    .result{padding:12px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 6px 16px rgba(9,30,66,0.04)}
+    .score{color:#059669;font-weight:700;margin-top:6px}
+    aside .small{color:var(--muted);font-size:14px}
+    footer{max-width:1200px;margin:18px auto;text-align:center;color:var(--muted)}
+    .top-actions{display:flex;gap:8px;align-items:center}
+    .muted{color:var(--muted);font-size:13px}
+    .token-indicator{font-size:12px;background:#0b74de1a;padding:6px;border-radius:8px;color:#034ea2}
+    .last-box{margin-top:10px;padding:10px;background:#f8fafc;border-radius:8px}
+    .last-item{padding:8px;border-radius:8px;background:linear-gradient(180deg,#fff,#fcfeff);margin-top:8px}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#0b4bd6;font-weight:600;font-size:12px}
+    @media (max-width:980px){ .container{grid-template-columns:1fr; padding:12px} header{padding:14px} nav{display:none} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">PR</div>
+      <div>
+        <div style="font-weight:700;font-size:16px">Personalized Recommender</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.9)">Demo dashboard — Not medical advice</div>
+      </div>
+    </div>
+    <nav>
+      <div class="top-actions">
+        <div class="token-indicator" id="tokenBadge">Not logged</div>
+        <button id="btnLogout" style="background:#fff;color:var(--accent)">Log out</button>
+        <button id="btnPing" style="background:transparent">Ping</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section>
+      <div class="card">
+        <h3 style="margin:0">Ask for recommendations</h3>
+        <p class="muted">Type a short query (natural language) and press Recommend.</p>
+        <div style="margin-top:12px" class="search-row">
+          <input id="query" placeholder="e.g. hypertension treatment options" style="flex:1"/>
+          <input id="topk" type="number" min="1" max="20" value="5" style="width:80px"/>
+          <button id="btnRec" class="btn">Recommend</button>
+        </div>
+
+        <div id="results" class="results" aria-live="polite"></div>
+        <div id="recInfo" class="muted" style="margin-top:12px"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h3 style="margin:0">Model testing (open)</h3>
+        <p class="muted">Test the disease classifier (open endpoint).</p>
+        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+          <input id="age" placeholder="age" style="width:90px"/>
+          <input id="bp" placeholder="blood_pressure" style="width:120px"/>
+          <input id="glu" placeholder="glucose" style="width:120px"/>
+          <input id="hr" placeholder="heart_rate" style="width:120px"/>
+          <button id="btnPredict" class="btn">Predict</button>
+        </div>
+        <pre id="predictOut" class="muted" style="margin-top:12px;white-space:pre-wrap"></pre>
+      </div>
+    </section>
+
+    <aside>
+      <div class="card">
+        <h4 style="margin:0">Account</h4>
+        <div style="margin-top:10px">
+          <div class="small">Signed in as: <span id="who">-</span></div>
+          <div style="margin-top:8px">
+            <button id="btnShowToken" style="background:#f3f4f6;color:#0b74de;border:1px solid #e6eef8">Show token</button>
+          </div>
+          <pre id="tokenBox" style="display:none;white-space:break-spaces;margin-top:10px;padding:8px;background:#f8fafc;border-radius:8px"></pre>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h4 style="margin:0">Quick actions</h4>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button id="btnLast" class="btn" style="background:#0b74de">Show last request</button>
+          <button id="btnClearLocal" style="background:#f3f4f6;color:#0b74de;border:1px solid #e6eef8">Clear token</button>
+        </div>
+
+        <div id="last_summary" class="last-box" aria-live="polite" style="display:none">
+          <!-- friendly summary will be injected here -->
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer>Made for demo purposes. Replace models and secrets for production.</footer>
+
+  <script>
+    // Helper API call which adds Authorization header automatically if token present
+    async function api(path, method='GET', body=null, requireAuth=false){
+      const headers = { Accept:'application/json' };
+      if(body){ headers['Content-Type']='application/json'; body = JSON.stringify(body); }
+      const token = localStorage.getItem('demo_token');
+      if(requireAuth && !token) return { error: 'not_authenticated' };
+      if(token) headers['Authorization'] = 'Bearer ' + token;
+      const resp = await fetch(path, { method, headers, body });
+      try{ return await resp.json(); } catch(e){ return { _raw: await resp.text(), status: resp.status }; }
+    }
+
+    // UI helpers
+    function showResults(items){
+      const el = document.getElementById('results'); el.innerHTML='';
+      for(const it of items){
+        const d = document.createElement('div'); d.className='result';
+        const t = document.createElement('div'); t.style.fontWeight='700'; t.innerText = it.name || ('id_'+it.id);
+        const s = document.createElement('div'); s.className='score'; s.innerText = 'score: ' + ((it.semantic_score || it.tfidf_score || it.score || 0)).toFixed(4);
+        const desc = document.createElement('div'); desc.className='muted'; desc.innerText = it.desc || '';
+        d.appendChild(t); d.appendChild(s); d.appendChild(desc);
+        el.appendChild(d);
+      }
+    }
+
+    document.getElementById('btnRec').onclick = async ()=>{
+      const q = document.getElementById('query').value.trim();
+      const topk = parseInt(document.getElementById('topk').value || '5');
+      if(!q) return alert('Enter a query');
+      const res = await api('/recommend','POST',{query:q,top_k:topk}, true);
+      if(res.results){ showResults(res.results); document.getElementById('recInfo').innerText = res.disclaimer || ''; }
+      else { alert(JSON.stringify(res)); }
+    };
+
+    document.getElementById('btnPredict').onclick = async ()=>{
+      const age = Number(document.getElementById('age').value || 0);
+      const bp = Number(document.getElementById('bp').value || 0);
+      const glu = Number(document.getElementById('glu').value || 0);
+      const hr = Number(document.getElementById('hr').value || 0);
+      const r = await api('/predict_open','POST',{age, blood_pressure:bp, glucose:glu, heart_rate:hr});
+      document.getElementById('predictOut').innerText = JSON.stringify(r, null, 2);
+    };
+
+    // account & token UI
+    function refreshAuthUI(){
+      const token = localStorage.getItem('demo_token');
+      document.getElementById('tokenBadge').innerText = token ? 'Logged in' : 'Not logged';
+      document.getElementById('who').innerText = token ? ( 'You' ) : '-';
+      document.getElementById('tokenBox').style.display = 'none';
+    }
+    document.getElementById('btnLogout').onclick = ()=>{ localStorage.removeItem('demo_token'); refreshAuthUI(); window.location.href='/login_page'; };
+    document.getElementById('btnShowToken').onclick = ()=>{
+      const t = localStorage.getItem('demo_token');
+      const box = document.getElementById('tokenBox');
+      box.style.display = t ? 'block' : 'none';
+      box.innerText = t || 'No token';
+    };
+    document.getElementById('btnClearLocal').onclick = ()=>{ localStorage.removeItem('demo_token'); refreshAuthUI(); alert('Token cleared'); };
+
+    document.getElementById('btnPing').onclick = async ()=>{ const r = await api('/ping'); alert(JSON.stringify(r)); };
+
+    // --- NEW: friendly last-request rendering ---
+    function renderLastSummary(data){
+      const container = document.getElementById('last_summary');
+      container.style.display = 'block';
+      container.innerHTML = ''; // clear
+
+      if(!data || (!data.last_request && !data.last_response)){
+        container.innerHTML = '<div class="muted">No recent requests found.</div>';
+        return;
+      }
+
+      const lr = data.last_request || {};
+      const resp = data.last_response || {};
+
+      // top line
+      const top = document.createElement('div');
+      top.innerHTML = `<div style="display:flex;gap:8px;align-items:center"><span class="pill">${lr.endpoint||'-'}</span><div style="font-weight:700;margin-left:6px">${(lr.query||'').slice(0,80) || '—'}</div></div>`;
+      container.appendChild(top);
+
+      // meta row
+      const meta = document.createElement('div');
+      meta.className = 'muted';
+      meta.style.marginTop='8px';
+      meta.innerText = `top_k: ${lr.top_k || '-'}`
+      container.appendChild(meta);
+
+      // results list (friendly)
+      const list = document.createElement('div');
+      list.style.marginTop='8px';
+      if(resp.results && Array.isArray(resp.results) && resp.results.length){
+        resp.results.slice(0,10).forEach(it=>{
+          const item = document.createElement('div');
+          item.className = 'last-item';
+          const title = document.createElement('div'); title.style.fontWeight='700'; title.innerText = it.name || ('id_'+it.id);
+          const desc = document.createElement('div'); desc.className='muted'; desc.style.marginTop='6px'; desc.innerText = it.desc || '';
+          const score = document.createElement('div'); score.style.marginTop='6px'; score.style.fontSize='13px'; score.style.color='#0b74de';
+          const s = (it.semantic_score || it.tfidf_score || it.score);
+          score.innerText = s !== undefined ? ('score: ' + Number(s).toFixed(4)) : '';
+          item.appendChild(title); item.appendChild(desc); item.appendChild(score);
+          list.appendChild(item);
+        });
+      } else {
+        list.innerHTML = '<div class="muted">No results available for last request.</div>';
+      }
+      container.appendChild(list);
+    }
+
+    document.getElementById('btnLast').onclick = async ()=>{
+      const r = await api('/last_request');
+      renderLastSummary(r);
+    };
+
+    // on load
+    (function(){
+      refreshAuthUI();
+      const token = localStorage.getItem('demo_token');
+      if(!token){
+        document.getElementById('tokenBadge').innerText = 'Not logged — sign in';
+      } else {
+        document.getElementById('tokenBadge').innerText = 'Logged in';
+      }
+      document.getElementById('query').value = 'hypertension treatment options';
+      api('/last_request').then(r=>{ if(r && (r.last_request || r.last_response)) renderLastSummary(r); });
+    })();
+  </script>
+</body>
+</html>

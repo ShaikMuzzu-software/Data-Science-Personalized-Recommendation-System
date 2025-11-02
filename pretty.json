@@ -1,0 +1,34 @@
+{
+    "results": [
+        {
+            "desc": "Calcium channel blocker for hypertension.",
+            "id": 4,
+            "name": "Amlodipine",
+            "score": 0.7167702808413025
+        },
+        {
+            "desc": "Used for high blood pressure and heart failure.",
+            "id": 3,
+            "name": "Lisinopril",
+            "score": 0.2049553009205781
+        },
+        {
+            "desc": "Oral diabetes medicine that helps control blood sugar.",
+            "id": 7,
+            "name": "Glimepiride",
+            "score": 0.0
+        },
+        {
+            "desc": "Pain reliever; low-dose aspirin used for cardiac protection.",
+            "id": 5,
+            "name": "Aspirin",
+            "score": 0.0
+        },
+        {
+            "desc": "Lowers cholesterol; helps prevent cardiovascular disease.",
+            "id": 6,
+            "name": "Atorvastatin",
+            "score": 0.0
+        }
+    ]
+}
